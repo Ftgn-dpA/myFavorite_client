@@ -1,17 +1,12 @@
 <template>
     <div class="login-wrap">
-        <div class="ms-title" style="font-size: 30px">我的收藏夹<span style="font-size: 10px; margin-left: 73px;">
-            <u></u></span>
+        <div class="ms-title" style="font-size: 30px">
+            我的收藏夹
         </div>
-        <div class="tab">
-            <el-table :data="data" border ref="multipleTable">
-                <el-table-column label="名称" prop="name" min-width="15%"></el-table-column>
-                <el-table-column label="备注" prop="description" min-width="60%"></el-table-column>
-                <el-table-column label="操作" prop="url" min-width="25%"></el-table-column>
-            </el-table>
+        <div class="button-container">
+            <el-button type="primary" @click="sign_up()">注册</el-button>
+            <el-button type="primary" @click="sign_in()">登录</el-button>
         </div>
-        <el-button type="primary" @click="sign_up()">注册</el-button>
-        <el-button type="primary" @click="sign_in()">登录</el-button>
         <el-dialog
             width="30%"
             title="注册账号"
@@ -166,12 +161,14 @@ export default {
 </script>
 
 <style scoped>
-.tab {
-    position: absolute;
-    top: 20%;
-    left: 25%;
-    width: 805px;
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
     height: 100%;
+    text-align: center;
+    line-height: 100px
 }
 
 .login-wrap {
@@ -185,7 +182,7 @@ export default {
     position: absolute;
     top: 40%;
     width: 100%;
-    margin-top: -230px;
+    margin-top: -50px;
     text-align: center;
     font-size: 14px;
     color: #fff;

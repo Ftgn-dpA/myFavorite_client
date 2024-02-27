@@ -14,9 +14,11 @@
                 <el-table-column label="创建时间" prop="create_time" min-width="250%"></el-table-column>
                 <el-table-column label="操作" min-width="110%">
                     <template v-slot="scope">
-                        <el-button type="text" @click="openedit(scope.row)" v-if="check_role(scope.row)">修改
+                        <el-button type="text" @click="editAlt(scope.row)" v-if="accessAlt(scope.row)">
+                            修改
                         </el-button>
-                        <el-button type="text" @click="del_user(scope.row)" v-if="check_role(scope.row)">删除
+                        <el-button type="text" @click="del_user(scope.row)" v-if="accessDel(scope.row)">
+                            删除
                         </el-button>
                     </template>
                 </el-table-column>
@@ -182,15 +184,23 @@ export default {
                 }
             )
         },
-        check_role(row) {
+        accessAlt(row) {
             let roleMap = {
                 '超级管理员': 0,
                 '管理员': 1,
                 '普通用户': 2
             };
-            return localStorage.getItem('role') < roleMap[row.role];
+            return localStorage.getItem('role') === '0' && roleMap[row.role] !== 0;
         },
-        openedit(row) {
+        accessDel(row) {
+            let roleMap = {
+                '超级管理员': 0,
+                '管理员': 1,
+                '普通用户': 2
+            };
+            return Number(localStorage.getItem('role')) < roleMap[row.role];
+        },
+        editAlt(row) {
             this.dialogFormVisibleed = true;
             this.form = {
                 password1: '',
