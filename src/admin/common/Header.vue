@@ -1,6 +1,6 @@
 <template>
     <div class="header">
-        <div class="logo">管理</div>
+        <div class="logo">{{ username }}的收藏夹</div>
         <div class="user-info">
             <el-dropdown trigger="click" @command="handleCommand">
                 <span class="el-dropdown-link">
@@ -9,7 +9,7 @@
                 </span>
                 <el-dropdown-menu v-slot="dropdown">
                     <el-dropdown-item command="change_pass">修改密码</el-dropdown-item>
-                    <el-dropdown-item command="loginout">退出</el-dropdown-item>
+                    <el-dropdown-item command="logout">退出</el-dropdown-item>
                 </el-dropdown-menu>
             </el-dropdown>
         </div>
@@ -59,7 +59,7 @@ export default {
     },
     methods: {
         handleCommand(command) {
-            if (command === 'loginout') {
+            if (command === 'logout') {
                 localStorage.removeItem('username');
                 localStorage.removeItem('role');
                 localStorage.removeItem('id');

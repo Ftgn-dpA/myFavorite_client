@@ -30,12 +30,12 @@ export default {
                     {
                         icon: 'el-icon-setting',
                         index: 'account_admin',
-                        title: '用户管理',
+                        title: '用户列表',
                     },
                     {
                         icon: 'el-icon-setting',
                         index: 'favorite_admin',
-                        title: '收藏管理',
+                        title: '收藏列表',
                     }
                 ]
         }

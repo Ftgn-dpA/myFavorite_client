@@ -2,29 +2,39 @@
     <div>
         <div class="crumbs">
             <el-breadcrumb separator="/">
-                <el-breadcrumb-item><i class="el-icon-setting"></i> 管理</el-breadcrumb-item>
-                <el-breadcrumb-item>用户列表</el-breadcrumb-item>
+                <el-breadcrumb-item @click.native="returnHome()">
+                    <i class="el-icon-setting"></i>
+                    {{ username }}的收藏夹
+                </el-breadcrumb-item>
+                <el-breadcrumb-item @click.native="init(); shiftViewMode(0);">用户列表</el-breadcrumb-item>
+                <el-breadcrumb-item v-if="viewMode === 1">{{ viewedUserName }}的收藏</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
         <div>
-            <el-table :data="data" border style="width: 70%" ref="multipleTable">
-                <el-table-column label="ID" prop="id" min-width="80%"></el-table-column>
-                <el-table-column label="用户名" prop="username" min-width="200%"></el-table-column>
-                <el-table-column label="角色" prop="role" min-width="110%"></el-table-column>
-                <el-table-column label="创建时间" prop="create_time" min-width="250%"></el-table-column>
-                <el-table-column label="操作" min-width="110%">
+            <el-table :data="data" border style="width: 100%" ref="multipleTable" v-show="viewMode === 0">
+                <el-table-column label="ID" prop="id" min-width="15%"></el-table-column>
+                <el-table-column label="用户名" prop="username" min-width="20%"></el-table-column>
+                <el-table-column label="角色" prop="role" min-width="15%"></el-table-column>
+                <el-table-column label="创建时间" prop="create_time" min-width="25%"></el-table-column>
+                <el-table-column label="操作" min-width="25%" align="center">
                     <template v-slot="scope">
-                        <el-button type="text" @click="editAlt(scope.row)" v-if="accessAlt(scope.row)">
-                            修改
-                        </el-button>
-                        <el-button type="text" @click="del_user(scope.row)" v-if="accessDel(scope.row)">
-                            删除
-                        </el-button>
+                        <el-button type="text" @click="viewFavorite(scope.row)">查看</el-button>
+                        <el-button type="text" @click="editAlt(scope.row)" v-if="accessAlt(scope.row)">修改</el-button>
+                        <el-button type="text" @click="delUser(scope.row)" v-if="accessDel(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
+            <el-table :data="data" border style="width: 100%" ref="multipleTable" v-if="viewMode === 1">
+                <el-table-column label="网站名称" prop="name" min-width="20%"></el-table-column>
+                <el-table-column label="网站地址" prop="url" min-width="30%">
+                    <template v-slot="scope">
+                        <a :href="scope.row.url" target="_blank">{{ scope.row.url }}</a>
+                    </template>
+                </el-table-column>
+                <el-table-column label="说明" prop="description" min-width="50%"></el-table-column>
+            </el-table>
             <div style="text-align: center">
-                <el-button type="primary" @click="adduser()" style="margin-top: 100px">添加账号</el-button>
+                <el-button type="primary" @click="addUser()" style="margin-top: 100px" v-show="getRole() === '0' && viewMode === 0">添加账号</el-button>
             </div>
         </div>
         <el-dialog
@@ -101,7 +111,7 @@ import main from "../../main";
 
 export default {
     data: function () {
-        var checkpasswd = (rule, value, callback) => {
+        const checkpasswd = (rule, value, callback) => {
             if (value === '') {
                 callback(new Error('请再次确认新密码'));
             } else if (value !== this.form.password1) {
@@ -110,7 +120,7 @@ export default {
                 callback();
             }
         };
-        var checkuser = (rule, value, callback) => {
+        const checkuser = (rule, value, callback) => {
             for (let i = 0; i < this.data.length; i++) {
                 if (this.data[i].username === value) {
                     this.form.ban = '1';
@@ -123,6 +133,8 @@ export default {
             dialogFormVisibleed: false,
             dialogFormVisibleed1: false,
             options: [{value: 0, label: "超级管理员"}, {value: 1, label: "管理员"}, {value: 2, label: "普通用户"}],
+            viewMode: 0, // 0为用户列表，1为查看用户收藏
+            viewedUserName: '',
             form: {
                 id: '',
                 username: '',
@@ -168,6 +180,12 @@ export default {
             this.init();
         }
     },
+    computed: {
+        username() {
+            let username = localStorage.getItem('username');
+            return username ? username : this.name;
+        }
+    },
     methods: {
         init() {
             this.$http.get(main.url + "/users/list").then(
@@ -184,6 +202,12 @@ export default {
                 }
             )
         },
+        getRole() {
+            return localStorage.getItem('role');
+        },
+        returnHome() {
+            this.$router.push({path: '/admin'});
+        },
         accessAlt(row) {
             let roleMap = {
                 '超级管理员': 0,
@@ -199,6 +223,20 @@ export default {
                 '普通用户': 2
             };
             return Number(localStorage.getItem('role')) < roleMap[row.role];
+        },
+        shiftViewMode(mode) {
+            this.viewMode = mode;
+        },
+        viewFavorite(row) {
+            this.$http.get(main.url + "/users/view", {params: {'owner': row.id}}).then(
+                success => {
+                    this.data = success.data;
+                }
+            ).then(() => {
+                this.viewMode = 1;
+                this.viewedUserName = row.username;
+                }
+            )
         },
         editAlt(row) {
             this.dialogFormVisibleed = true;
@@ -229,7 +267,7 @@ export default {
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         emulateJSON: true
                     }).then(
-                    success => {
+                    () => {
                         this.$message({type: 'success', message: '修改成功'});
                         this.form = {
                             id: '',
@@ -244,7 +282,7 @@ export default {
                 );
             }
         },
-        adduser() {
+        addUser() {
             this.form = {
                 id: '',
                 username: '',
@@ -277,7 +315,7 @@ export default {
                         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                         emulateJSON: true
                     }).then(
-                    success => {
+                    () => {
                         this.$message({type: 'success', message: '添加成功'});
                         this.form = {
                             id: '',
@@ -293,7 +331,7 @@ export default {
                 this.dialogFormVisibleed1 = false
             }
         },
-        del_user(row) {  //删除用户
+        delUser(row) {  //删除用户
             if (row.username === localStorage.getItem('username'))
                 this.$message({type: 'info', message: '不能删除自己！'});
             else if (row.id <= localStorage.getItem('role'))
@@ -310,7 +348,7 @@ export default {
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                             emulateJSON: true
                         }).then(
-                        success => {
+                        () => {
                             this.$message({type: 'success', message: '已删除'});
                             this.init();
                         }
@@ -330,7 +368,7 @@ export default {
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     emulateJSON: true
                 }).then(
-                success => {
+                () => {
                     this.$message({type: 'success', message: '修改成功'});
                     this.form = {
                         id: '',
